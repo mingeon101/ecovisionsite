@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 탄소 오름</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/byMjbXs1/Gemini-Generated-Image-s04wxfs04wxfs04w-1.png?dl=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="game-display-area" class="flex-grow flex flex-col justify-between p-4">
+            <header>
+                <h1 class="text-3xl sm:text-4xl font-bold">나의 탄소 오름</h1>
+            </header>
+            
+            <main class="flex-grow flex flex-col items-center justify-center">
+                <div class="oreum-background">
+                    <div id="oreum" class="oreum level-1">
+                        <div class="tree-container">
+                            <div id="tree1" class="tree"><div class="trunk"></div><div class="leaves"></div></div>
+                            <div id="tree2" class="tree"><div class="trunk"></div><div class="leaves"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <div class="dashboard">
+                <div class="stat">레벨 <span id="level-value" class="text-2xl sm:text-3xl">1</span></div>
+                <div class="stat">생명력 <span id="life-force-value" class="text-2xl sm:text-3xl">0</span></div>
+                <div class="stat">감축량 <span id="ghg-reduced-value" class="text-2xl sm:text-3xl">0g</span></div>
+            </div>
+            
+            <div class="sensor-dashboard">
+                <p>현재 이동수단: <span id="transport-display" class="font-bold text-blue-600 animate-pulse">대기 중...</span></p>
+                <p>현재 속도: <span id="speed-display" class="value">0 m/s</span></p>
+                <p>가속도: <span id="acc-display" class="value">0 m/s²</span></p>
+                <p id="user-info-display" class="text-xs truncate text-gray-400">로그인하고 오름을 키워보세요!</p>
+                <p id="db-status" class="text-xs text-gray-400">Firebase 초기화 중...</p>
+            </div>
+        </div>
+        
+        <footer class="w-full border-t border-gray-300 bg-white">
+            <nav class="flex justify-around items-center h-16 text-gray-500">
+                <a id="mission-icon-wrapper" class="flex-1 flex justify-center items-center h-full cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></a>
+                <a id="rewards-icon-wrapper" class="flex-1 flex justify-center items-center h-full cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></a>
+                <a id="profile-icon-wrapper" class="flex-1 flex justify-center items-center h-full cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+            </nav>
+        </footer>
+    </div>
+    
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-title" class="font-bold text-lg mb-2"></h3>
+            <p id="modal-message" class="text-sm text-gray-600 mb-4"></p>
+            <button id="modal-close-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md">확인</button>
+        </div>
+    </div>
+    
+    <div id="side-panel-overlay" class="side-panel-overlay">
+        <div id="side-panel" class="side-panel">
+            <div class="side-panel-header">
+                <h2 id="side-panel-title">마이페이지</h2>
+                <button id="side-panel-close-btn">&times;</button>
+            </div>
+            <div class="side-panel-content">
+                <div id="logged-out-view">
+                    <p class="text-center text-sm mb-4">로그인하고 오름을 키워보세요!</p>
+                    <button id="google-sign-in-btn" class="google-btn"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" class="w-6 h-6"><span>Google 계정으로 로그인</span></button>
+                </div>
+                
+                <div id="logged-in-view" class="hidden">
+                    <p id="panel-user-info" class="text-center text-sm mb-4">로그인 정보가 없습니다.</p>
+                    <div class="flex flex-col gap-4">
+                        <div class="stat"><p>현재 레벨</p><span id="panel-level-value">1</span></div>
+                        <div class="stat"><p>총 감축량</p><span id="panel-ghg-reduced-value">0g</span></div>
+                    </div>
+                    
+                    <button id="subscribe-btn" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">
+                        알림 구독하기
+                    </button>
+
+                    <button id="sign-out-btn" class="mt-8 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">로그아웃</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 보상 모달 -->
+    <div id="rewards-modal-overlay" class="rewards-modal-overlay">
+        <div id="rewards-modal" class="rewards-modal-content">
+            <h2 class="text-2xl font-bold text-gray-800">오늘의 보상</h2>
+            <p class="text-sm text-gray-500 mb-4">탄소 감축 활동으로 보상을 획득하세요!</p>
+            <div id="reward-list-container" class="flex flex-col gap-3 w-full">
+                <!-- 보상 목록이 여기에 동적으로 추가됩니다. -->
+            </div>
+            <button id="rewards-close-btn" class="mt-4 px-6 py-2 bg-green-600 text-white rounded-full">닫기</button>
+        </div>
+    </div>
+    
+    <!-- 미션 모달 -->
+    <div id="mission-modal-overlay" class="mission-modal-overlay">
+        <div id="mission-modal" class="mission-modal-content">
+            <div style="height: 700px; overflow-y: auto">
+                <h2 class="text-2xl font-bold text-gray-800">오늘의 미션</h2>
+                <p class="text-gray-600 mb-4">친환경 활동으로 생명력을 얻고 오름을 키워보세요!</p>
+                <ul id="mission-list" class="mission-list">
+                    <li class="mission-item"><h3>🔌 플러그 뽑기</h3><p>사용하지 않는 가전제품의 플러그를 뽑아 대기 전력을 차단하세요.</p></li>
+                    <li class="mission-item"><h3>🌡️ 냉난방 온도 조절</h3><p>여름철에는 에어컨 온도를 26°C 이상으로, 겨울철에는 난방 온도를 20°C 이하로 유지하세요.</p></li>
+                    <li class="mission-item"><h3>💡 전등 끄기</h3><p>불필요한 조명은 끄고 에너지를 절약하세요.</p></li>
+                    <li class="mission-item"><h3>🚰 물 절약</h3><p>양치할 때 컵 사용하기, 샤워 시간 줄이기 등 물을 아껴 쓰세요.</p></li>
+                    <li class="mission-item"><h3>🍶 텀블러 사용</h3><p>일회용 컵 대신 텀블러를 사용하세요.</p></li>
+                    <li class="mission-item"><h3>💸 친환경 제품 구매</h3><p>환경마크가 있는 제품이나 재활용 소재로 만든 제품을 구매하세요.</p></li>
+                    <li class="mission-item">
+                        <h3>🥕 중고 물품 활용</h3>
+                        <p>필요한 물건은 중고로 구매하거나, 사용하지 않는 물건은 판매하거나 기부하세요.</p>
+                    </li>
+                    <li class="mission-item">
+                        <h3>🛒 지역 농산물 이용</h3>
+                        <p>지역 농산물을 구매해 운송 과정에서 발생하는 탄소 배출량을 줄이세요.</p>
+                    </li>
+                    <li class="mission-item">
+                        <h3>🍚 잔반 남기지 않기</h3>
+                        <p>먹을 만큼만 조리하고 남기지 않아 음식물 쓰레기 및 물 낭비를 줄이세요.</p>
+                    </li>
+                    <li class="mission-item">
+                        <h3>🚶‍♂️‍➡️ 플로깅을 실천하기</h3>
+                        <p>조깅하면서 쓰레기를 줍는 활동으로 환경 보호와 운동을 동시에 하세요.</p>
+                    </li>
+                    <li class="mission-item">
+                        <h3>🪜 계단 이용</h3>
+                        <p>가까운 층은 엘리베이터 대신 계단을 이용해 전력 소비를 줄이세요.</p>
+                    </li>
+                    <li class="mission-item">
+                        <h3>🖥️ 컴퓨터 절전 모드 활용</h3>
+                        <p>잠시 자리를 비울 때는 절전 모드로 전환하거나 전원을 끄세요.</p>
+                    </li>
+                    <li class="mission-item">
+                        <h3>♻️ 택배 박스 재활용</h3>
+                        <p>박스에 붙어 있는 테이프, 송장 스티커 등 이물질을 제거하고 박스를 펼쳐 배출하세요.</p>
+                    </li>
+                    <li class="mission-item">
+                        <h3>👕 패스트 패션 지양</h3>
+                        <p>저렴하고 유행에 따라 자주 바뀌는 옷보다는 오래 입을 수 있는 좋은 옷을 구매하세요.</p>
+                    </li>
+                    <li class="mission-item">
+                        <h3>☘️ 에코 캠페인 참여</h3>
+                        <p>환경 단체에서 주관하는 캠페인이나 서명 운동에 참여하세요.</p>
+                    </li>
+                </ul>
+                <button id="mission-close-btn" class="mt-4 px-6 py-2 bg-green-600 text-white rounded-full">닫기</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://www.chatbase.co/embed.min.js" id="KwLJdboX39BEnTOig8OKU"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
